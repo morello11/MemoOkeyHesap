@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0d1016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>101 Okey Açma Hesaplayıcısı</title>
+<style>
+  :root{
+    --bg:#0d1016;
+    --panel:#161b24;
+    --panel2:#1d2431;
+    --line:#2a3240;
+    --txt:#eef2f8;
+    --dim:#8d98ab;
+    --accent:#4ade80;
+    --green:#118c4a;
+    --green2:#16a35a;
+    --tap:56px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex;flex-direction:column;
+    height:100dvh;overflow:hidden;
+    overscroll-behavior:none;
+    touch-action:manipulation;
+    font-variant-numeric:tabular-nums;
+  }
+  button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation;font-variant-numeric:tabular-nums}
+  button:active{transform:scale(.96)}
+
+  /* ---------- ÜST TOPLAM ---------- */
+  header{
+    flex:0 0 auto;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top) + 10px) 14px 12px;
+    text-align:center;
+    transition:background .25s ease;
+  }
+  header.open{
+    background:linear-gradient(180deg,var(--green2),var(--green));
+    border-bottom-color:#0a6c39;
+    animation:pop .35s ease;
+  }
+  @keyframes pop{0%{transform:scale(.97)}55%{transform:scale(1.02)}100%{transform:scale(1)}}
+  .cap{font-size:12px;letter-spacing:.22em;font-weight:700;color:var(--dim)}
+  header.open .cap{color:#d7ffe8}
+  .total{
+    font-size:clamp(58px,21vw,104px);
+    font-weight:900;line-height:.95;letter-spacing:-.03em;
+    margin:2px 0 4px;
+  }
+  .sub{font-size:15px;font-weight:700;color:var(--dim);min-height:20px}
+  header.open .sub{color:#fff;font-size:20px;letter-spacing:.06em}
+
+  /* ---------- PER KARTLARI ---------- */
+  main{flex:1 1 auto;overflow-y:auto;padding:12px 12px 4px;-webkit-overflow-scrolling:touch}
+  .hint{color:var(--dim);text-align:center;font-size:14px;line-height:1.6;padding:26px 18px}
+  .hint b{color:var(--txt)}
+
+  .per{background:var(--panel);border:2px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+  .per.aktif{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,222,128,.14)}
+  .perhead{display:flex;align-items:center;gap:8px;width:100%;padding:0 6px 0 14px;min-height:50px;text-align:left}
+  .pname{font-size:16px;font-weight:800;flex:1 1 auto}
+  .per.aktif .pname::after{content:" • AKTİF";color:var(--accent);font-size:12px;letter-spacing:.08em}
+  .ptot{font-size:20px;font-weight:900;background:var(--panel2);border-radius:10px;padding:4px 12px;min-width:52px;text-align:center}
+  .per.aktif .ptot{background:rgba(74,222,128,.16);color:var(--accent)}
+  .pdel{width:48px;height:48px;font-size:18px;color:var(--dim);border-radius:12px;flex:0 0 auto}
+  .tiles{display:flex;flex-wrap:wrap;gap:8px;padding:0 12px 12px}
+  .empty{color:var(--dim);font-size:13px;padding:0 14px 14px}
+
+  .tile{
+    min-width:48px;height:48px;padding:0 10px;border-radius:12px;
+    font-size:23px;font-weight:900;border:2px solid transparent;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tile.kirmizi{background:#e5342f;color:#fff;border-color:#ff7a75}
+  .tile.sari   {background:#f5c518;color:#191b20;border-color:#ffe488}
+  .tile.mavi   {background:#2f7fe5;color:#fff;border-color:#86b9ff}
+  .tile.siyah  {background:#171b23;color:#eef2f8;border-color:#7c879b}
+
+  /* ---------- ALT GİRİŞ PANELİ ---------- */
+  footer{
+    flex:0 0 auto;background:var(--panel);border-top:1px solid var(--line);
+    padding:10px 10px calc(env(safe-area-inset-bottom) + 10px);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .colors{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .col{
+    height:52px;border-radius:13px;font-size:clamp(12px,3.4vw,14px);font-weight:800;
+    border:3px solid transparent;opacity:.55;letter-spacing:.02em;
+  }
+  .col[aria-pressed="true"]{opacity:1;border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.13)}
+  .col.kirmizi{background:#e5342f;color:#fff}
+  .col.sari   {background:#f5c518;color:#191b20}
+  .col.mavi   {background:#2f7fe5;color:#fff}
+  .col.siyah  {background:#171b23;color:#eef2f8;border-color:#3b4453}
+  .col.siyah[aria-pressed="true"]{border-color:#fff}
+
+  .nums{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .num{
+    height:54px;border-radius:13px;background:var(--panel2);
+    border:1px solid var(--line);font-size:26px;font-weight:900;
+  }
+  .num:active{background:#2b3446}
+  .undo{
+    grid-column:span 2;height:54px;border-radius:13px;
+    background:transparent;border:2px solid #57402090;color:#f2b544;
+    font-size:16px;font-weight:800;
+  }
+  .acts{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+  .abtn{height:50px;border-radius:13px;font-size:16px;font-weight:800}
+  .newper{background:var(--accent);color:#06210f}
+  .reset{background:transparent;border:2px solid #4a2b2b;color:#f07171}
+</style>
+</head>
+<body>
+
+<header id="head">
+  <div class="cap">TOPLAM</div>
+  <div class="total" id="total">0</div>
+  <div class="sub" id="sub">101'e 101 puan kaldı</div>
+</header>
+
+<main id="list"></main>
+
+<footer>
+  <div class="colors" id="colors"></div>
+  <div class="nums" id="nums"></div>
+  <div class="acts">
+    <button class="abtn newper" id="newper">+ Yeni per</button>
+    <button class="abtn reset" id="reset">Yeni el</button>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  var GOAL = 101;
+  var COLORS = [
+    { key:'kirmizi', label:'KIRMIZI' },
+    { key:'sari',    label:'SARI'    },
+    { key:'mavi',    label:'MAVİ'    },
+    { key:'siyah',   label:'SİYAH'   }
+  ];
+  var KEY = 'okey101-v1';
+
+  var state = { pers:[], activeId:null, nextPerId:1, seq:1, color:'kirmizi' };
+
+  var elTotal = document.getElementById('total');
+  var elSub   = document.getElementById('sub');
+  var elHead  = document.getElementById('head');
+  var elList  = document.getElementById('list');
+  var elCols  = document.getElementById('colors');
+  var elNums  = document.getElementById('nums');
+
+  /* ---------- kalıcılık ---------- */
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if(!raw) return;
+      var d = JSON.parse(raw);
+      if(d && Array.isArray(d.pers)){
+        state.pers = d.pers;
+        state.activeId = d.activeId;
+        state.nextPerId = d.nextPerId || d.pers.length + 1;
+        state.seq = d.seq || 1;
+        state.color = d.color || 'kirmizi';
+      }
+    } catch(e){}
+  }
+
+  /* ---------- veri ---------- */
+  function perTotal(p){
+    var t = 0;
+    for(var i=0;i<p.tiles.length;i++) t += p.tiles[i].n;
+    return t;
+  }
+  function grandTotal(){
+    var t = 0;
+    for(var i=0;i<state.pers.length;i++) t += perTotal(state.pers[i]);
+    return t;
+  }
+  function activePer(){
+    for(var i=0;i<state.pers.length;i++) if(state.pers[i].id === state.activeId) return state.pers[i];
+    return null;
+  }
+  function buzz(pattern){
+    if(navigator.vibrate){ try { navigator.vibrate(pattern); } catch(e){} }
+  }
+
+  /* ---------- işlemler ---------- */
+  function newPer(){
+    var p = { id: state.nextPerId++, tiles: [] };
+    state.pers.push(p);
+    state.activeId = p.id;
+    render(true);
+  }
+  function addTile(n){
+    var p = activePer();
+    if(!p){
+      p = { id: state.nextPerId++, tiles: [] };
+      state.pers.push(p);
+      state.activeId = p.id;
+    }
+    p.tiles.push({ c: state.color, n: n, q: state.seq++ });
+    buzz(12);
+    render(true);
+  }
+  function undo(){
+    var best = null, bestPer = null;
+    for(var i=0;i<state.pers.length;i++){
+      var t = state.pers[i].tiles;
+      for(var j=0;j<t.length;j++){
+        if(!best || t[j].q > best.q){ best = t[j]; bestPer = state.pers[i]; }
+      }
+    }
+    if(!best) return;
+    bestPer.tiles.splice(bestPer.tiles.indexOf(best), 1);
+    buzz(12);
+    render();
+  }
+  function removeTile(q){
+    for(var i=0;i<state.pers.length;i++){
+      var t = state.pers[i].tiles;
+      for(var j=0;j<t.length;j++){
+        if(t[j].q === q){ t.splice(j,1); buzz(12); render(); return; }
+      }
+    }
+  }
+  function removePer(id){
+    for(var i=0;i<state.pers.length;i++){
+      if(state.pers[i].id === id){
+        if(state.pers[i].tiles.length && !confirm((i+1) + '. per silinsin mi?')) return;
+        state.pers.splice(i,1);
+        if(state.activeId === id) state.activeId = state.pers.length ? state.pers[state.pers.length-1].id : null;
+        render();
+        return;
+      }
+    }
+  }
+  function resetAll(){
+    if(!confirm('Yeni el başlasın mı?\nTüm perler silinecek.')) return;
+    state.pers = []; state.activeId = null; state.nextPerId = 1; state.seq = 1;
+    render();
+  }
+
+  /* ---------- çizim ---------- */
+  var wasOpen = null;
+
+  function render(scroll){
+    var total = grandTotal();
+    var open = total >= GOAL;
+
+    elTotal.textContent = total;
+    elHead.classList.toggle('open', open);
+    if(open){
+      elSub.textContent = 'AÇABİLİRSİN!';
+      if(wasOpen === false) buzz([40,70,40,70,180]);
+    } else {
+      elSub.textContent = GOAL + "'e " + (GOAL - total) + ' puan kaldı';
+    }
+    wasOpen = open;
+
+    if(!state.pers.length){
+      elList.innerHTML = '<div class="hint">Henüz per yok.<br>Aşağıdan bir <b>renk</b> seç, sonra <b>sayıya</b> bas.<br>İlk taş otomatik olarak 1. peri açar.</div>';
+    } else {
+      var h = '';
+      for(var i=0;i<state.pers.length;i++){
+        var p = state.pers[i];
+        var act = p.id === state.activeId;
+        h += '<section class="per' + (act ? ' aktif' : '') + '">';
+        h +=   '<div class="perhead" data-act="' + p.id + '">';
+        h +=     '<span class="pname">' + (i+1) + '. Per</span>';
+        h +=     '<span class="ptot">' + perTotal(p) + '</span>';
+        h +=     '<button class="pdel" data-rmper="' + p.id + '" aria-label="peri sil">✕</button>';
+        h +=   '</div>';
+        if(p.tiles.length){
+          h += '<div class="tiles">';
+          for(var j=0;j<p.tiles.length;j++){
+            var t = p.tiles[j];
+            h += '<button class="tile ' + t.c + '" data-rm="' + t.q + '">' + t.n + '</button>';
+          }
+          h += '</div>';
+        } else {
+          h += '<div class="empty">Boş — sayıya basarak taş ekle</div>';
+        }
+        h += '</section>';
+      }
+      elList.innerHTML = h;
+    }
+
+    for(var c=0;c<elCols.children.length;c++){
+      var b = elCols.children[c];
+      b.setAttribute('aria-pressed', b.dataset.color === state.color ? 'true' : 'false');
+    }
+
+    if(scroll){
+      var node = elList.querySelector('.per.aktif');
+      if(node) node.scrollIntoView({ block:'nearest' });
+    }
+    save();
+  }
+
+  /* ---------- arayüz kurulumu ---------- */
+  var ch = '';
+  for(var i=0;i<COLORS.length;i++){
+    ch += '<button class="col ' + COLORS[i].key + '" data-color="' + COLORS[i].key + '" aria-pressed="false">' + COLORS[i].label + '</button>';
+  }
+  elCols.innerHTML = ch;
+
+  var nh = '';
+  for(var n=1;n<=13;n++) nh += '<button class="num" data-num="' + n + '">' + n + '</button>';
+  nh += '<button class="undo" id="undo">↶ Geri al</button>';
+  elNums.innerHTML = nh;
+
+  elCols.addEventListener('click', function(e){
+    var b = e.target.closest('[data-color]');
+    if(!b) return;
+    state.color = b.dataset.color;
+    render();
+  });
+
+  elNums.addEventListener('click', function(e){
+    var b = e.target.closest('[data-num]');
+    if(b){ addTile(parseInt(b.dataset.num,10)); return; }
+    if(e.target.closest('#undo')) undo();
+  });
+
+  elList.addEventListener('click', function(e){
+    var rp = e.target.closest('[data-rmper]');
+    if(rp){ removePer(parseInt(rp.dataset.rmper,10)); return; }
+    var rm = e.target.closest('[data-rm]');
+    if(rm){ removeTile(parseInt(rm.dataset.rm,10)); return; }
+    var hd = e.target.closest('[data-act]');
+    if(hd){ state.activeId = parseInt(hd.dataset.act,10); render(); }
+  });
+
+  document.getElementById('newper').addEventListener('click', newPer);
+  document.getElementById('reset').addEventListener('click', resetAll);
+
+  // çift dokunuşta zoom olmasın
+  document.addEventListener('dblclick', function(e){ e.preventDefault(); }, { passive:false });
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
